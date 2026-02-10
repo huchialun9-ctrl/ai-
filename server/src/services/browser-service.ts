@@ -2,6 +2,30 @@ import { Page } from 'playwright';
 import crypto from 'crypto';
 
 export class BrowserService {
+    static async launch() {
+        const { chromium } = require('playwright');
+        const browser = await chromium.launch({ headless: false }); // Debug mode
+        const context = await browser.newContext();
+        const page = await context.newPage();
+        return { browser, page };
+    }
+
+    static async close(browser: any) {
+        await browser.close();
+    }
+
+    static async navigate(page: Page, url: string) {
+        await page.goto(url, { waitUntil: 'domcontentloaded' });
+    }
+
+    static async click(page: Page, selector: string) {
+        await page.click(selector);
+    }
+
+    static async type(page: Page, selector: string, text: string) {
+        await page.fill(selector, text);
+    }
+
     /**
      * Captures the Accessibility Object Model (AOM) snapshot.
      * This is 10x smaller than full DOM and much better for LLM reasoning.

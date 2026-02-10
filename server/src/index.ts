@@ -36,6 +36,14 @@ async function main() {
 
         fastify.log.info(`Task created: ${task.id}`);
 
+        // Trigger Agent Loop (Fire and Forget)
+        // In production, this should go to a job queue (BullMQ/Redis)
+        import('./services/agent-service').then(({ AgentService }) => {
+            AgentService.runAgentLoop(task.id, prompt).catch(err => {
+                console.error(`Background Agent Error for task ${task.id}:`, err);
+            });
+        });
+
         return {
             taskId: task.id,
             status: task.status,
