@@ -1,14 +1,14 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { Bot, Send, Brain, Shield, Zap, Terminal, LogOut, Plus, ChevronRight, Activity, Code } from 'lucide-react';
+import { Bot, Send, Brain, Shield, Zap, Terminal, LogOut, Plus, ChevronRight, Activity, Code, Layout, Globe, User } from 'lucide-react';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
 export default function Dashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'agent' | 'vault' | 'logs' | 'dev'>('agent');
+  const [activeTab, setActiveTab] = useState<'home' | 'agent' | 'vault' | 'logs' | 'dev'>('home');
 
   // States for different tabs
   const [apiKeys, setApiKeys] = useState<{ id: string, name: string, lastUsed: string | null, createdAt: string }[]>([]);
@@ -162,6 +162,7 @@ export default function Dashboard() {
         </div>
 
         <nav className="flex-1 px-4 py-6 space-y-1">
+          <NavItem active={activeTab === 'home'} onClick={() => setActiveTab('home')} icon={<Layout className="w-5 h-5" />} label="Overview" />
           <NavItem active={activeTab === 'agent'} onClick={() => setActiveTab('agent')} icon={<Brain className="w-5 h-5" />} label="Command Center" />
           <NavItem active={activeTab === 'vault'} onClick={() => setActiveTab('vault')} icon={<Shield className="w-5 h-5" />} label="Identity Vault" />
           <NavItem active={activeTab === 'dev'} onClick={() => setActiveTab('dev')} icon={<Code className="w-5 h-5" />} label="Developers" />
@@ -180,6 +181,7 @@ export default function Dashboard() {
       <main className="pl-64 h-screen flex flex-col overflow-hidden">
         <header className="h-20 border-b border-white/5 px-10 flex items-center justify-between bg-slate-900/20 backdrop-blur-sm">
           <h2 className="text-lg font-black tracking-widest uppercase text-slate-400">
+            {activeTab === 'home' && 'SYSTEM_OVERVIEW'}
             {activeTab === 'agent' && 'MATRIX_RUNNER'}
             {activeTab === 'vault' && 'VAULT_ACCESS'}
             {activeTab === 'dev' && 'INFRA_KEYS'}
@@ -197,6 +199,133 @@ export default function Dashboard() {
         </header>
 
         <div className="flex-1 overflow-y-auto p-10 custom-scrollbar">
+          {activeTab === 'home' && (
+            <div className="max-w-7xl mx-auto space-y-10">
+              {/* Stats Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="bg-slate-900/40 p-6 rounded-4xl border border-white/5 flex flex-col justify-between group transition-all hover:border-blue-500/20">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="w-10 h-10 bg-emerald-500/10 rounded-2xl flex items-center justify-center border border-emerald-500/20">
+                      <Activity className="w-5 h-5 text-emerald-500" />
+                    </div>
+                    <span className="text-[10px] font-black text-emerald-500 uppercase">System Heartbeat</span>
+                  </div>
+                  <div>
+                    <div className="text-3xl font-black italic tracking-tighter">99.8%</div>
+                    <p className="text-[10px] text-slate-500 font-bold uppercase mt-1">Operational Reliability</p>
+                  </div>
+                </div>
+
+                <div className="bg-slate-900/40 p-6 rounded-4xl border border-white/5 flex flex-col justify-between group transition-all hover:border-blue-500/20">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="w-10 h-10 bg-blue-500/10 rounded-2xl flex items-center justify-center border border-blue-500/20">
+                      <Zap className="w-5 h-5 text-blue-500" />
+                    </div>
+                    <span className="text-[10px] font-black text-blue-500 uppercase">Active Sessions</span>
+                  </div>
+                  <div>
+                    <div className="text-3xl font-black italic tracking-tighter">{tasks.length}</div>
+                    <p className="text-[10px] text-slate-500 font-bold uppercase mt-1">Mission Instances Loaded</p>
+                  </div>
+                </div>
+
+                <div className="bg-slate-900/40 p-6 rounded-4xl border border-white/5 flex flex-col justify-between group transition-all hover:border-blue-500/20">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="w-10 h-10 bg-purple-500/10 rounded-2xl flex items-center justify-center border border-purple-500/20">
+                      <Globe className="w-5 h-5 text-purple-500" />
+                    </div>
+                    <span className="text-[10px] font-black text-purple-500 uppercase">Identities</span>
+                  </div>
+                  <div>
+                    <div className="text-3xl font-black italic tracking-tighter">{personas.length}</div>
+                    <p className="text-[10px] text-slate-500 font-bold uppercase mt-1">Secured Vault Assets</p>
+                  </div>
+                </div>
+
+                <div className="bg-slate-900/40 p-6 rounded-4xl border border-white/5 flex flex-col justify-between group transition-all hover:border-blue-500/20">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="w-10 h-10 bg-orange-500/10 rounded-2xl flex items-center justify-center border border-orange-500/20">
+                      <Shield className="w-5 h-5 text-orange-500" />
+                    </div>
+                    <span className="text-[10px] font-black text-orange-500 uppercase">Infrastructure</span>
+                  </div>
+                  <div>
+                    <div className="text-3xl font-black italic tracking-tighter">{apiKeys.length}</div>
+                    <p className="text-[10px] text-slate-500 font-bold uppercase mt-1">Active Access Nodes</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Main Overview Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                <div className="lg:col-span-2 space-y-8">
+                  <div className="bg-slate-900/40 rounded-4xl border border-white/5 p-8">
+                    <div className="flex items-center justify-between mb-8">
+                      <h3 className="text-lg font-black flex items-center gap-2">
+                        <Plus className="w-4 h-4 text-blue-500" /> QUICK_INITIATE
+                      </h3>
+                      <button onClick={() => setActiveTab('agent')} className="text-[10px] font-black text-blue-500 hover:text-white transition-all uppercase tracking-widest">Advanced Command →</button>
+                    </div>
+                    <div className="bg-black/20 p-6 rounded-3xl border border-white/5 flex gap-4 items-center">
+                      <input
+                        placeholder="Ask Nova to perform any mission..."
+                        className="flex-1 bg-transparent border-none outline-none text-sm placeholder:text-slate-600"
+                        readOnly
+                        onClick={() => setActiveTab('agent')}
+                      />
+                      <div className="w-10 h-10 bg-blue-600 rounded-2xl flex items-center justify-center cursor-pointer" onClick={() => setActiveTab('agent')}>
+                        <ChevronRight className="w-5 h-5" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-900/40 rounded-4xl border border-white/5 p-8">
+                    <h3 className="text-lg font-black mb-6 uppercase tracking-tight italic">Mission Log Hub</h3>
+                    <div className="space-y-4">
+                      {tasks.map(t => (
+                        <div key={t.id} className="flex items-center justify-between p-5 bg-white/5 rounded-3xl border border-white/5 group hover:bg-white/8 transition-all">
+                          <div className="flex items-center gap-4">
+                            <div className={`w-2 h-2 rounded-full ${t.status === 'COMPLETED' ? 'bg-emerald-500' : 'bg-red-500'}`}></div>
+                            <span className="text-xs font-bold text-slate-300">{t.goal}</span>
+                          </div>
+                          <span className="text-[10px] font-black text-slate-500 uppercase">{new Date(t.createdAt).toLocaleDateString()}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-8">
+                  <div className="bg-linear-to-br from-indigo-900/40 to-slate-900/40 rounded-4xl border border-white/10 p-8 shadow-2xl relative overflow-hidden group">
+                    <div className="relative z-10">
+                      <h3 className="text-lg font-black mb-2 italic">Nova Assistant</h3>
+                      <p className="text-xs text-slate-400 mb-6 leading-relaxed">System is optimized for your browsing mission. 3 personas available for rotation.</p>
+                      <div className="space-y-2">
+                        <button onClick={() => setActiveTab('vault')} className="w-full py-3 bg-white/10 hover:bg-white text-white hover:text-indigo-900 border border-white/10 rounded-2xl text-[10px] font-black transition-all uppercase tracking-widest">Enter Vault</button>
+                        <button onClick={() => setActiveTab('dev')} className="w-full py-3 bg-white/5 hover:bg-blue-600 border border-white/10 rounded-2xl text-[10px] font-black transition-all uppercase tracking-widest">Control API</button>
+                      </div>
+                    </div>
+                    <Bot className="absolute -bottom-4 -right-4 w-24 h-24 text-white/5 group-hover:text-white/10 transition-all rotate-12" />
+                  </div>
+
+                  <div className="bg-slate-900/40 rounded-4xl border border-white/5 p-8">
+                    <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-6 italic">Account Info</h3>
+                    <div className="space-y-4 text-xs">
+                      <div className="flex justify-between border-b border-white/5 pb-3">
+                        <span className="text-slate-500 font-bold">Tier</span>
+                        <span className="text-blue-500 font-black italic underline decoration-blue-500/20 offset-2">STANDARD_FOUNDER</span>
+                      </div>
+                      <div className="flex justify-between border-b border-white/5 pb-3">
+                        <span className="text-slate-500 font-bold">Node Region</span>
+                        <span className="text-slate-200 font-bold uppercase">AWS_AP_SOUTH_1</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {activeTab === 'agent' && (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 max-w-7xl mx-auto h-full">
               <div className="lg:col-span-8 flex flex-col h-full space-y-6">
