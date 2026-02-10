@@ -7,7 +7,7 @@
         "start": "pnpm --filter web start"
     },
     "devDependencies": {
-        "typescript": "^5.0.0"
+        "typescript": "^5.4.0"
     },
     "engines": {
         "node": ">=20.19.0"
