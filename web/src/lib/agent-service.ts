@@ -1,20 +1,17 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { OpenAI } from 'openai';
 import { BrowserService } from './browser-service';
 import { TaskManager } from './task-manager';
 import { TaskStatus, StepStatus } from '@prisma/client';
 
-let genAI: any = null;
+let openai: OpenAI | null = null;
 
-function getGeminiModel() {
-    if (!genAI) {
-        genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || '');
+function getOpenAIClient() {
+    if (!openai) {
+        openai = new OpenAI({
+            apiKey: process.env.OPENAI_API_KEY || '',
+        });
     }
-    return genAI.getGenerativeModel({
-        model: "gemini-2.0-flash",
-        generationConfig: {
-            responseMimeType: "application/json",
-        }
-    });
+    return openai;
 }
 
 export class AgentService {
@@ -24,7 +21,7 @@ export class AgentService {
         // 1. Launch Browser
         const { browser, page } = await BrowserService.launch();
         let stepCount = 0;
-        const maxSteps = 15; // Increased slightly for more complex goals
+        const maxSteps = 15;
 
         try {
             while (stepCount < maxSteps) {
@@ -35,8 +32,8 @@ export class AgentService {
                 const aom = await BrowserService.getAOMSnapshot(page);
                 const url = page.url();
 
-                // 3. Ask Gemini
-                const model = getGeminiModel();
+                // 3. Ask OpenAI
+                const client = getOpenAIClient();
                 const prompt = `You are an autonomous browser agent. Your goal is: ${goal}.
                 Current URL: ${url}
                 
@@ -49,8 +46,16 @@ export class AgentService {
                 - params: { url, selector, text }
                 `;
 
-                const result = await model.generateContent(prompt);
-                const text = result.response.text();
+                const completion = await client.chat.completions.create({
+                    model: "gpt-4o",
+                    messages: [
+                        { role: "system", content: "You are a helpful browser automation assistant. You must always output valid JSON." },
+                        { role: "user", content: prompt }
+                    ],
+                    response_format: { type: "json_object" }
+                });
+
+                const text = completion.choices[0].message.content;
                 const response = JSON.parse(text || "{}");
 
                 console.log(`[Agent] Plan:`, response);
