@@ -4,7 +4,6 @@
     "scripts": {
         "dev:web": "pnpm --filter web dev",
         "dev:server": "pnpm --filter server dev",
-        "dev:extension": "pnpm --filter extension dev",
         "build": "pnpm --recursive build",
         "start": "pnpm --filter server start"
     },
