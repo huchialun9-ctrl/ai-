@@ -25,6 +25,8 @@ const Activity = LucideActivity as any
 const Cpu = LucideCpu as any
 const Table = LucideTable as any
 import "./style.css"
+import { ApiClient } from "./utils/api-client"
+import { wsClient } from "./utils/ws-client"
 
 function SidePanel() {
     const [input, setInput] = useState("")
@@ -47,18 +49,56 @@ function SidePanel() {
         { field: "Location", value: "San Francisco" },
         { field: "Connection", value: "2nd" }
     ])
+    const [isConnected, setIsConnected] = useState(false)
 
-    const handleSend = () => {
+    useEffect(() => {
+        // Connect to WebSocket
+        wsClient.connect()
+
+        // Listen for messages
+        const unsubscribe = wsClient.onMessage((data) => {
+            if (data.type === 'log' || data.type === 'status') {
+                setLogs(prev => [
+                    { status: "info", message: data.message || JSON.stringify(data), time: new Date().toLocaleTimeString() },
+                    ...prev.slice(0, 10) // Keep last 10 logs
+                ])
+            }
+        })
+
+        // Check Health
+        ApiClient.healthCheck().then(alive => setIsConnected(alive))
+
+        return () => {
+            unsubscribe()
+            wsClient.disconnect()
+        }
+    }, [])
+
+
+    const handleSend = async () => {
         if (!input.trim()) return
-        const newMsg = { role: "user", content: input }
+        const prompt = input
+        const newMsg = { role: "user", content: prompt }
         setMessages(prev => [...prev, newMsg])
         setInput("")
 
         // Add a log entry for the action
         setLogs(prev => [
-            { status: "thinking", message: `Processing: ${input.substring(0, 20)}...`, time: new Date().toLocaleTimeString() },
-            ...prev.slice(0, 4)
+            { status: "thinking", message: `Sending task: ${prompt.substring(0, 20)}...`, time: new Date().toLocaleTimeString() },
+            ...prev.slice(0, 10)
         ])
+
+        // Send to API
+        try {
+            const res = await ApiClient.createTask(prompt, persona.email)
+            if (res) {
+                setMessages(prev => [...prev, { role: "assistant", content: `Task started: ${res.taskId}. I am working on it.` }])
+            } else {
+                setMessages(prev => [...prev, { role: "assistant", content: "Failed to start task. Is the server running?" }])
+            }
+        } catch (e) {
+            setMessages(prev => [...prev, { role: "assistant", content: "Error connecting to server." }])
+        }
     }
 
     return (
@@ -68,16 +108,16 @@ function SidePanel() {
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                         <div className="relative">
-                            <div className="absolute -inset-1 bg-blue-500/20 rounded-lg blur-sm animate-pulse" />
+                            <div className={`absolute -inset-1 ${isConnected ? 'bg-blue-500/20' : 'bg-red-500/20'} rounded-lg blur-sm animate-pulse`} />
                             <div className="relative p-2 bg-slate-800 rounded-lg border border-white/10">
-                                <Sparkles className="w-5 h-5 text-blue-400" />
+                                <Sparkles className={`w-5 h-5 ${isConnected ? 'text-blue-400' : 'text-slate-400'}`} />
                             </div>
                         </div>
                         <div>
                             <h1 className="font-bold text-sm tracking-tight bg-linear-to-br from-white to-slate-400 bg-clip-text text-transparent">Nova Agent</h1>
                             <div className="flex items-center gap-1.5 mt-0.5">
-                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                <span className="text-[10px] text-slate-500 font-medium uppercase tracking-widest">Network Active</span>
+                                <div className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-emerald-500' : 'bg-red-500'} animate-pulse`} />
+                                <span className="text-[10px] text-slate-500 font-medium uppercase tracking-widest">{isConnected ? 'System Online' : 'Offline'}</span>
                             </div>
                         </div>
                     </div>
