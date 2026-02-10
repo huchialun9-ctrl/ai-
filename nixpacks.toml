@@ -2,9 +2,12 @@
 nixPkgs = ["nodejs_22", "pnpm"]
 
 [phases.install]
-cmds = ["pnpm i --frozen-lockfile"]
+cmds = ["pnpm i --frozen-lockfile --ignore-scripts"]
 
 [phases.build]
-cmds = ["pnpm build"]
+cmds = [
+    "pnpm --filter web exec prisma generate --schema=./web/prisma/schema.prisma",
+    "pnpm build"
+]
 [start]
 cmd = "pnpm --filter web start"
