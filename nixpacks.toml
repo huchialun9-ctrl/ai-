@@ -6,5 +6,5 @@ cmds = ["pnpm i --frozen-lockfile"]
 
 [phases.build]
 cmds = ["pnpm build"]
-[phases.start]
-cmds = ["pnpm --filter web start"]
+[start]
+cmd = "pnpm --filter web start"
