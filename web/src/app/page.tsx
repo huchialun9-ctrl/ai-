@@ -9,12 +9,86 @@ export default function Dashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('agent');
+  const [prompt, setPrompt] = useState('');
+  const [messages, setMessages] = useState<{ role: 'user' | 'assistant', content: string }[]>([]);
+  const [taskId, setTaskId] = useState<string | null>(null);
+  const [isExecuting, setIsExecuting] = useState(false);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login');
     }
   }, [status, router]);
+
+  // Status Polling Effect
+  useEffect(() => {
+    let pollInterval: NodeJS.Timeout;
+
+    if (taskId && isExecuting) {
+      pollInterval = setInterval(async () => {
+        try {
+          const res = await fetch(`/api/agent/task/${taskId}`);
+          if (!res.ok) return;
+          const data = await res.json();
+
+          // Map steps to assistant messages
+          const agentMessages = data.steps.map((step: any) => ({
+            role: 'assistant',
+            content: `[Step ${step.stepIndex}] ${step.description}${step.result ? `\nResult: ${step.result}` : ''}`
+          }));
+
+          setMessages(prev => {
+            // Only update if we have new information to avoid jitter
+            if (agentMessages.length > prev.filter(m => m.role === 'assistant').length) {
+              const userMsgs = prev.filter(m => m.role === 'user');
+              return [...userMsgs, ...agentMessages];
+            }
+            return prev;
+          });
+
+          if (data.status === 'COMPLETED' || data.status === 'FAILED') {
+            setIsExecuting(false);
+            setTaskId(null);
+            clearInterval(pollInterval);
+          }
+        } catch (error) {
+          console.error('Polling error:', error);
+        }
+      }, 3000); // Poll every 3 seconds
+    }
+
+    return () => clearInterval(pollInterval);
+  }, [taskId, isExecuting]);
+
+  const handleSend = async () => {
+    if (!prompt.trim() || isExecuting) return;
+
+    const userPrompt = prompt;
+    setPrompt('');
+    setMessages(prev => [...prev, { role: 'user', content: userPrompt }]);
+    setIsExecuting(true);
+
+    try {
+      const res = await fetch('/api/agent/task', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: session?.user?.email || 'anonymous',
+          prompt: userPrompt
+        })
+      });
+
+      const data = await res.json();
+      if (data.taskId) {
+        setTaskId(data.taskId);
+      } else {
+        throw new Error(data.error || 'Failed to start task');
+      }
+    } catch (error: any) {
+      setMessages(prev => [...prev, { role: 'assistant', content: `Error: ${error.message}` }]);
+      setIsExecuting(false);
+    }
+  };
 
   if (status === 'loading') {
     return (
@@ -48,8 +122,8 @@ export default function Dashboard() {
           <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
             <p className="text-[10px] uppercase font-bold text-slate-500 mb-2">System Status</p>
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-              <span className="text-xs font-medium">Cloud Runner Online</span>
+              <div className={`w-2 h-2 rounded-full ${isExecuting ? 'bg-blue-500' : 'bg-emerald-500'} animate-pulse`}></div>
+              <span className="text-xs font-medium">{isExecuting ? 'Agent Active' : 'Cloud Runner Online'}</span>
             </div>
           </div>
         </div>
@@ -83,18 +157,37 @@ export default function Dashboard() {
           {activeTab === 'agent' && (
             <div className="max-w-6xl mx-auto h-[calc(100vh-200px)] grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Chat Panel */}
-              <div className="lg:col-span-1 flex flex-col h-full bg-slate-900/40 border border-white/5 rounded-4xl p-6 shadow-2xl">
+              <div className="lg:col-span-1 flex flex-col h-full bg-slate-900/40 border border-white/5 rounded-4xl p-6 shadow-2xl overflow-hidden">
                 <div className="flex-1 space-y-6 mb-6 overflow-y-auto pr-2 scrollbar-hide">
-                  <ChatMessage role="assistant" content="Remote Session: Agent is navigating to LinkedIn... Waiting for handover if needed." />
+                  {messages.length === 0 && (
+                    <div className="h-full flex flex-col items-center justify-center opacity-40 select-none">
+                      <Bot className="w-12 h-12 mb-4" />
+                      <p className="text-sm font-medium text-center px-8">Ready to initiate mission. Enter your objective below.</p>
+                    </div>
+                  )}
+                  {messages.map((msg, i) => (
+                    <ChatMessage key={i} role={msg.role} content={msg.content} />
+                  ))}
+                  {isExecuting && taskId && messages.filter(m => m.role === 'assistant').length === 0 && (
+                    <ChatMessage role="assistant" content="System: Initializing autonomous session... Bypassing cloud guards." />
+                  )}
                 </div>
                 <div className="relative">
                   <textarea
                     placeholder="Refine mission..."
-                    className="w-full bg-slate-900/80 border border-white/10 rounded-3xl py-4 px-6 pr-14 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all resize-none text-sm shadow-xl"
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSend())}
+                    disabled={isExecuting}
+                    className="w-full bg-slate-900/80 border border-white/10 rounded-3xl py-4 px-6 pr-14 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all resize-none text-sm shadow-xl disabled:opacity-50"
                     rows={1}
                   />
-                  <button className="absolute right-2 top-1/2 -translate-y-1/2 p-2.5 bg-blue-600 rounded-2xl text-white hover:bg-blue-500 transition-all shadow-lg shadow-blue-600/20">
-                    <Send className="w-4 h-4" />
+                  <button
+                    onClick={handleSend}
+                    disabled={isExecuting || !prompt.trim()}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2.5 bg-blue-600 rounded-2xl text-white hover:bg-blue-500 transition-all shadow-lg shadow-blue-600/20 disabled:bg-slate-700 disabled:shadow-none"
+                  >
+                    {isExecuting ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Send className="w-4 h-4" />}
                   </button>
                 </div>
               </div>
@@ -135,6 +228,29 @@ export default function Dashboard() {
                   <Field label="Email" value="jianyu@example.com" />
                   <Field label="Job Title" value="Software Engineer" />
                   <Field label="Location" value="San Francisco, CA" />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'logs' && (
+            <div className="max-w-6xl mx-auto space-y-4">
+              <div className="bg-black/40 rounded-3xl border border-white/5 p-6 font-mono text-xs overflow-hidden">
+                <div className="flex items-center justify-between mb-4 border-b border-white/5 pb-4">
+                  <span className="text-slate-500 uppercase font-bold tracking-widest">System Telemetry</span>
+                  <span className="text-emerald-500 font-bold">LIVE_READY</span>
+                </div>
+                <div className="space-y-2 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+                  {messages.filter(m => m.role === 'assistant').map((msg, i) => (
+                    <div key={i} className="flex gap-4">
+                      <span className="text-slate-600">[{new Date().toLocaleTimeString()}]</span>
+                      <span className="text-blue-400 font-bold">LOG</span>
+                      <span className="text-slate-300">{msg.content}</span>
+                    </div>
+                  ))}
+                  {messages.length === 0 && (
+                    <div className="text-slate-600 italic">No activity recorded for current session.</div>
+                  )}
                 </div>
               </div>
             </div>
