@@ -48,6 +48,13 @@ const server = http.createServer((req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server is running on 0.0.0.0:${PORT}`);
+const HOST = '0.0.0.0';
+
+server.on('error', (err) => {
+    console.error('Server error:', err);
+});
+
+server.listen(PORT, HOST, () => {
+    console.log(`Nova-Agent Landing Page is live at http://${HOST}:${PORT}`);
+    console.log('Detected Environment:', process.env.NODE_ENV || 'development');
 });
