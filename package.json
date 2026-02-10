@@ -1,5 +1,5 @@
 {
-  "name": "託管網",
+  "name": "nova-agent",
   "displayName": "託管網",
   "version": "0.0.1",
   "description": "Nova-Agent: AI-powered browser automation agent.",
@@ -7,7 +7,8 @@
   "scripts": {
     "dev": "plasmo dev",
     "build": "plasmo build",
-    "package": "plasmo package"
+    "package": "plasmo package",
+    "start": "node index.js"
   },
   "dependencies": {
     "clsx": "^2.1.1",
