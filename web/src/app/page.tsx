@@ -22,6 +22,7 @@ export default function Dashboard() {
   const [messages, setMessages] = useState<{ role: 'user' | 'assistant', content: string }[]>([]);
   const [taskId, setTaskId] = useState<string | null>(null);
   const [isExecuting, setIsExecuting] = useState(false);
+  const [runtimeError, setRuntimeError] = useState<string | null>(null);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -29,28 +30,71 @@ export default function Dashboard() {
     }
   }, [status, router]);
 
+  // Initial Eager Fetch for Home Stats
+  useEffect(() => {
+    if (status === 'authenticated' && session) {
+      const fetchAll = async () => {
+        try {
+          const [tokenRes, vaultRes] = await Promise.all([
+            fetch('/api/tokens'),
+            fetch('/api/vault')
+          ]);
+
+          if (tokenRes.ok) {
+            const tokens = await tokenRes.json();
+            setApiKeys(Array.isArray(tokens) ? tokens : []);
+          } else {
+            const err = await tokenRes.json();
+            console.error('Tokens API Error:', err);
+          }
+
+          if (vaultRes.ok) {
+            const p = await vaultRes.json();
+            setPersonas(Array.isArray(p) ? p : []);
+          } else {
+            const err = await vaultRes.json();
+            console.error('Vault API Error:', err);
+          }
+        } catch (err: any) {
+          console.error('Eager fetch failed:', err);
+          setRuntimeError(`Connectivity Error: ${err.message}`);
+        }
+      };
+      fetchAll();
+    }
+  }, [status, session]);
+
   // Fetch Data based on active tab
   useEffect(() => {
-    if (!session) return;
+    if (status !== 'authenticated' || !session) return;
 
-    if (activeTab === 'dev') {
-      fetch('/api/tokens')
-        .then(res => res.json())
-        .then(data => setApiKeys(Array.isArray(data) ? data : []))
-        .catch(err => console.error('Failed to fetch tokens:', err));
-    } else if (activeTab === 'vault') {
-      fetch('/api/vault')
-        .then(res => res.json())
-        .then(data => setPersonas(Array.isArray(data) ? data : []))
-        .catch(err => console.error('Failed to fetch personas:', err));
-    } else if (activeTab === 'agent' && !isExecuting) {
-      // Fetch recent tasks mock
-      setTasks([
-        { id: 't1', goal: 'Amazon data sync', status: 'COMPLETED', createdAt: new Date().toISOString() },
-        { id: 't2', goal: 'Twitter reach automation', status: 'FAILED', createdAt: new Date().toISOString() }
-      ]);
-    }
-  }, [activeTab, session, isExecuting]);
+    const refreshData = async () => {
+      try {
+        if (activeTab === 'dev') {
+          const res = await fetch('/api/tokens');
+          const data = await res.json();
+          if (res.ok) setApiKeys(Array.isArray(data) ? data : []);
+          else throw new Error(data.error || 'Failed to fetch tokens');
+        } else if (activeTab === 'vault') {
+          const res = await fetch('/api/vault');
+          const data = await res.json();
+          if (res.ok) setPersonas(Array.isArray(data) ? data : []);
+          else throw new Error(data.error || 'Failed to fetch personas');
+        } else if (activeTab === 'agent' && !isExecuting) {
+          // Fetch recent tasks mock
+          setTasks([
+            { id: 't1', goal: 'Amazon data sync', status: 'COMPLETED', createdAt: new Date().toISOString() },
+            { id: 't2', goal: 'Twitter reach automation', status: 'FAILED', createdAt: new Date().toISOString() }
+          ]);
+        }
+      } catch (err: any) {
+        console.error('Tab Fetch Error:', err);
+        setRuntimeError(err.message);
+      }
+    };
+
+    refreshData();
+  }, [activeTab, session, status, isExecuting]);
 
   // Status Polling Effect
   useEffect(() => {
@@ -143,7 +187,28 @@ export default function Dashboard() {
   if (status === 'loading') {
     return (
       <div className="h-screen bg-[#020617] flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+          <span className="text-[10px] font-black tracking-widest text-slate-500 uppercase">Synchronizing Matrix...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (runtimeError) {
+    return (
+      <div className="h-screen bg-[#020617] flex items-center justify-center p-6 text-center">
+        <div className="max-w-md w-full bg-red-500/5 border border-red-500/20 p-10 rounded-4xl shadow-2xl">
+          <div className="w-16 h-16 bg-red-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-red-600/20">
+            <Shield className="w-8 h-8 text-white" />
+          </div>
+          <h2 className="text-2xl font-black italic mb-2 tracking-tighter">RUNTIME_RESTRICTION</h2>
+          <p className="text-sm text-slate-400 mb-8 leading-relaxed">The system encountered an operational failure in production environment.</p>
+          <div className="bg-black/40 p-4 rounded-2xl border border-white/5 font-mono text-xs text-red-400 mb-8 overflow-x-auto">
+            {runtimeError}
+          </div>
+          <button onClick={() => window.location.reload()} className="w-full py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-xs font-black uppercase tracking-widest transition-all">Retry Handshake</button>
+        </div>
       </div>
     );
   }
