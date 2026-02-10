@@ -14,8 +14,13 @@ export default function LoginPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setLoading(true)
-        await signIn("credentials", { email, password, callbackUrl: "/" })
-        setLoading(false)
+        try {
+            await signIn("credentials", { email, password, callbackUrl: "/" })
+        } catch (error) {
+            console.error("Login error:", error)
+        } finally {
+            setLoading(false)
+        }
     }
 
     return (
