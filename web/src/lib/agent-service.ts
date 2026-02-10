@@ -1,17 +1,20 @@
-import { OpenAI } from 'openai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { BrowserService } from './browser-service';
 import { TaskManager } from './task-manager';
 import { TaskStatus, StepStatus } from '@prisma/client';
 
-let openai: any = null;
+let genAI: any = null;
 
-function getOpenAI() {
-    if (!openai) {
-        openai = new OpenAI({
-            apiKey: process.env.OPENAI_API_KEY,
-        });
+function getGeminiModel() {
+    if (!genAI) {
+        genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || '');
     }
-    return openai;
+    return genAI.getGenerativeModel({
+        model: "gemini-2.0-flash",
+        generationConfig: {
+            responseMimeType: "application/json",
+        }
+    });
 }
 
 export class AgentService {
@@ -21,7 +24,7 @@ export class AgentService {
         // 1. Launch Browser
         const { browser, page } = await BrowserService.launch();
         let stepCount = 0;
-        const maxSteps = 10;
+        const maxSteps = 15; // Increased slightly for more complex goals
 
         try {
             while (stepCount < maxSteps) {
@@ -32,29 +35,24 @@ export class AgentService {
                 const aom = await BrowserService.getAOMSnapshot(page);
                 const url = page.url();
 
-                // 3. Ask LLM
-                const completion = await getOpenAI().chat.completions.create({
-                    model: "gpt-4o",
-                    messages: [
-                        {
-                            role: "system",
-                            content: `You are an autonomous browser agent. Your goal is: ${goal}.
-                            Current URL: ${url}
-                            
-                            Here is the accessibility tree of the page:
-                            ${JSON.stringify(aom, null, 2)}
-                            
-                            Output a JSON object with:
-                            - thought: reasoning
-                            - action: "navigate" | "click" | "type" | "finish" | "fail"
-                            - params: { url, selector, text }
-                            `
-                        }
-                    ],
-                    response_format: { type: "json_object" }
-                });
+                // 3. Ask Gemini
+                const model = getGeminiModel();
+                const prompt = `You are an autonomous browser agent. Your goal is: ${goal}.
+                Current URL: ${url}
+                
+                Here is the accessibility tree of the page:
+                ${JSON.stringify(aom, null, 2)}
+                
+                Output a JSON object with:
+                - thought: reasoning
+                - action: "navigate" | "click" | "type" | "finish" | "fail"
+                - params: { url, selector, text }
+                `;
 
-                const response = JSON.parse(completion.choices[0].message.content || "{}");
+                const result = await model.generateContent(prompt);
+                const text = result.response.text();
+                const response = JSON.parse(text || "{}");
+
                 console.log(`[Agent] Plan:`, response);
 
                 // 4. Record Step
