@@ -1,6 +1,5 @@
-import { PrismaClient, TaskStatus, StepStatus } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { TaskStatus, StepStatus } from '@prisma/client'
+import prisma from './prisma'
 
 export class TaskManager {
     static async createTask(userId: string, goal: string) {

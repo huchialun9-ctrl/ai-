@@ -3,9 +3,16 @@ import { BrowserService } from './browser-service';
 import { TaskManager } from './task-manager';
 import { TaskStatus, StepStatus } from '@prisma/client';
 
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-});
+let openai: any = null;
+
+function getOpenAI() {
+    if (!openai) {
+        openai = new OpenAI({
+            apiKey: process.env.OPENAI_API_KEY,
+        });
+    }
+    return openai;
+}
 
 export class AgentService {
     static async runAgentLoop(taskId: string, goal: string) {
@@ -26,7 +33,7 @@ export class AgentService {
                 const url = page.url();
 
                 // 3. Ask LLM
-                const completion = await openai.chat.completions.create({
+                const completion = await getOpenAI().chat.completions.create({
                     model: "gpt-4o",
                     messages: [
                         {

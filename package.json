@@ -2,10 +2,9 @@
     "name": "nova-agent-monorepo",
     "private": true,
     "scripts": {
-        "dev:web": "pnpm --filter web dev",
-        "dev:server": "pnpm --filter server dev",
-        "build": "pnpm --recursive build",
-        "start": "pnpm --filter server start"
+        "dev": "pnpm --filter web dev",
+        "build": "pnpm --filter web build",
+        "start": "pnpm --filter web start"
     },
     "devDependencies": {
         "typescript": "^5.0.0"

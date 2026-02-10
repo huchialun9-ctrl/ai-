@@ -42,7 +42,7 @@ export class BrowserService {
      */
     static async detectVisualChange(page: Page, previousHash?: string) {
         const screenshot = await page.screenshot();
-        const currentHash = crypto.createHash('md5').update(screenshot).digest('hex');
+        const currentHash = crypto.createHash('md5').update(screenshot as any).digest('hex');
 
         const changed = previousHash !== undefined && currentHash !== previousHash;
 
