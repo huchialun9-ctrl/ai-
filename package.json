@@ -13,6 +13,14 @@
         "node": ">=20.19.0"
     },
     "pnpm": {
+        "onlyBuiltDependencies": [
+            "prisma",
+            "@prisma/client",
+            "@prisma/engines",
+            "playwright",
+            "sharp",
+            "@parcel/watcher"
+        ],
         "overrides": {
             "@types/react": "19.2.13",
             "@types/react-dom": "19.2.3"
