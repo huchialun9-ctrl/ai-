@@ -6,7 +6,7 @@
   "author": "Nova-Agent Team",
   "scripts": {
     "dev": "plasmo dev",
-    "build": "plasmo build",
+    "build": "echo 'Extension build skipped for cloud deployment'",
     "package": "plasmo package",
     "start": "node index.js"
   },
