@@ -15,7 +15,16 @@ export default function LoginPage() {
         e.preventDefault()
         setLoading(true)
         try {
-            await signIn("credentials", { email, password, callbackUrl: "/" })
+            const result = await signIn("credentials", {
+                email,
+                password,
+                callbackUrl: "/",
+                redirect: true
+            })
+
+            if (result?.error) {
+                console.error("Login failed:", result.error)
+            }
         } catch (error) {
             console.error("Login error:", error)
         } finally {
