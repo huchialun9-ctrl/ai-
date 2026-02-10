@@ -4,7 +4,6 @@ import { useState } from "react"
 import { motion } from "framer-motion"
 import { Zap, Mail, Lock, ChevronRight, User, Loader2 } from "lucide-react"
 import Link from "next/link"
-import { createClient } from "@/lib/supabase"
 import { useRouter } from "next/navigation"
 
 export default function RegisterPage() {
@@ -21,24 +20,23 @@ export default function RegisterPage() {
         setError("")
 
         try {
-            const supabase = createClient()
-            const { data, error: signUpError } = await supabase.auth.signUp({
-                email,
-                password,
-                options: {
-                    data: {
-                        full_name: fullName,
-                    },
-                },
+            const res = await fetch("/api/auth/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    email,
+                    password,
+                    name: fullName
+                })
             })
 
-            if (signUpError) {
-                throw signUpError
+            const data = await res.json()
+
+            if (!res.ok) {
+                throw new Error(data.error || "Registration failed")
             }
 
-            if (data.user) {
-                router.push("/login?message=Check your email to confirm your account")
-            }
+            router.push("/login?message=Registration successful! Please sign in.")
         } catch (err: any) {
             console.error("Registration error:", err)
             setError(err.message || "An unexpected error occurred during registration")
