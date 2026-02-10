@@ -1,0 +1,73 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum TaskStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  PAUSED
+}
+
+enum StepStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+model Task {
+  id          String     @id @default(cuid())
+  userId      String
+  goal        String
+  status      TaskStatus @default(PENDING)
+  steps       TaskStep[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([userId])
+}
+
+model TaskStep {
+  id           String     @id @default(cuid())
+  taskId       String
+  task         Task       @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  stepIndex    Int
+  description  String
+  action       Json       // The JSON action defined by the AI
+  status       StepStatus @default(PENDING)
+  result       String?    // Success message or extraction result
+  error        String?    // Detailed error message if failed
+  screenshotUrl String?   // Pointer to cloud storage screenshot
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([taskId])
+}
+
+model Persona {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String   // Friendly name of the persona
+  data        String   // AES-encrypted JSON string containing Name, Email, Job, etc.
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model BrowserContext {
+  id          String   @id @default(cuid())
+  userId      String
+  sessionId   String   @unique // Playwright session ID
+  storageState Json     // Serialized cookies and local storage
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+}

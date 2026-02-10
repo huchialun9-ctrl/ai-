@@ -72,7 +72,7 @@ const server = http.createServer((req, res) => {
                 <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-600/20">
                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                 </div>
-                <span class="text-xl font-extrabold tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">Nova Agent</span>
+                <span class="text-xl font-extrabold tracking-tight bg-linear-to-r from-white to-slate-400 bg-clip-text text-transparent">Nova Agent</span>
             </div>
             <div class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-400">
                 <a href="#features" class="hover:text-blue-400 transition-colors">功能特性</a>
@@ -93,7 +93,7 @@ const server = http.createServer((req, res) => {
                     <span class="flex h-2 w-2 rounded-full bg-blue-500 animate-pulse"></span>
                     <span class="text-xs font-bold text-blue-400 uppercase tracking-widest">v0.0.1 Beta 版已上線</span>
                 </div>
-                <h1 class="text-5xl lg:text-7xl font-extrabold leading-[1.1] mb-8 bg-gradient-to-br from-white via-white to-slate-500 bg-clip-text text-transparent">
+                <h1 class="text-5xl lg:text-7xl font-extrabold leading-[1.1] mb-8 bg-linear-to-br from-white via-white to-slate-500 bg-clip-text text-transparent">
                     讓瀏覽器<br><span class="text-blue-500 glow-text">成為您的</span> AI 分身
                 </h1>
                 <p class="text-xl text-slate-400 mb-10 leading-relaxed max-w-2xl mx-auto lg:mx-0">
@@ -112,8 +112,8 @@ const server = http.createServer((req, res) => {
 
             <!-- Agent Simulation -->
             <div class="flex-1 w-full max-w-[420px] relative agent-sim">
-                <div class="absolute -inset-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-[2.5rem] blur-xl opacity-20"></div>
-                <div class="relative w-full aspect-[9/16] bg-[#020617] rounded-[2rem] border border-white/10 shadow-2xl p-1 overflow-hidden">
+                <div class="absolute -inset-1 bg-linear-to-r from-blue-600 to-indigo-600 rounded-4xl blur-xl opacity-20"></div>
+                <div class="relative w-full aspect-9/16 bg-[#020617] rounded-4xl border border-white/10 shadow-2xl p-1 overflow-hidden">
                     <!-- Extension Header Simulator -->
                     <div class="absolute top-0 left-0 w-full p-4 glass border-b border-white/5 flex items-center justify-between z-10">
                         <div class="flex items-center gap-2">
@@ -174,7 +174,7 @@ const server = http.createServer((req, res) => {
             
             <div class="grid md:grid-cols-3 gap-8">
                 <!-- Feature 1 -->
-                <div class="p-8 rounded-[2rem] glass hover:bg-blue-600/5 transition-all group border-white/5">
+                <div class="p-8 rounded-4xl glass hover:bg-blue-600/5 transition-all group border-white/5">
                     <div class="w-14 h-14 bg-blue-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-blue-500 group-hover:text-white transition-colors duration-500 text-blue-400">
                         <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
                     </div>
@@ -184,7 +184,7 @@ const server = http.createServer((req, res) => {
                     </p>
                 </div>
                 <!-- Feature 2 -->
-                <div class="p-8 rounded-[2rem] glass hover:bg-emerald-600/5 transition-all group border-white/5">
+                <div class="p-8 rounded-4xl glass hover:bg-emerald-600/5 transition-all group border-white/5">
                     <div class="w-14 h-14 bg-emerald-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-emerald-500 group-hover:text-white transition-colors duration-500 text-emerald-400">
                         <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.58 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.58 4 8 4s8-1.79 8-4M4 7c0-2.21 3.58-4 8-4s8 1.79 8 4m0 5c0 2.21-3.58 4-8 4s-8-1.79-8-4"></path></svg>
                     </div>
@@ -194,7 +194,7 @@ const server = http.createServer((req, res) => {
                     </p>
                 </div>
                 <!-- Feature 3 -->
-                <div class="p-8 rounded-[2rem] glass hover:bg-indigo-600/5 transition-all group border-white/5">
+                <div class="p-8 rounded-4xl glass hover:bg-indigo-600/5 transition-all group border-white/5">
                     <div class="w-14 h-14 bg-indigo-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-indigo-500 group-hover:text-white transition-colors duration-500 text-indigo-400">
                         <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
                     </div>

@@ -1,44 +1,23 @@
 {
-    "name": "nova-agent",
-    "displayName": "託管網",
-    "version": "0.0.1",
-    "description": "Nova-Agent: AI-powered browser automation agent.",
-    "author": "Nova-Agent Team",
+    "name": "nova-agent-monorepo",
+    "private": true,
     "scripts": {
-        "dev": "plasmo dev",
-        "build": "plasmo build",
-        "package": "plasmo package",
-        "start": "node index.js"
-    },
-    "dependencies": {
-        "clsx": "^2.1.1",
-        "crypto-js": "^4.2.0",
-        "framer-motion": "^12.34.0",
-        "lucide-react": "^0.563.0",
-        "plasmo": "0.90.5",
-        "react": "18.2.0",
-        "react-dom": "18.2.0",
-        "tailwind-merge": "^3.4.0"
+        "dev:web": "pnpm --filter web dev",
+        "dev:server": "pnpm --filter server dev",
+        "dev:extension": "pnpm --filter extension dev",
+        "build": "pnpm --recursive build",
+        "start": "pnpm --filter server start"
     },
     "devDependencies": {
-        "@ianvs/prettier-plugin-sort-imports": "4.1.1",
-        "@types/chrome": "0.0.258",
-        "@types/crypto-js": "^4.2.2",
-        "@types/node": "20.11.5",
-        "@types/react": "18.2.48",
-        "@types/react-dom": "18.2.18",
-        "autoprefixer": "^10.4.24",
-        "postcss": "^8.5.6",
-        "prettier": "3.2.4",
-        "tailwindcss": "^4.1.18",
-        "typescript": "5.3.3"
-    },
-    "manifest": {
-        "host_permissions": [
-            "https://*/*"
-        ]
+        "typescript": "^5.0.0"
     },
     "engines": {
         "node": ">=20.0.0"
+    },
+    "pnpm": {
+        "overrides": {
+            "@types/react": "19.2.13",
+            "@types/react-dom": "19.2.3"
+        }
     }
 }
