@@ -4,6 +4,7 @@
   "version": "0.0.1",
   "description": "Nova-Agent: AI-powered browser automation agent.",
   "author": "Nova-Agent Team",
+  "type": "commonjs",
   "scripts": {
     "dev": "plasmo dev",
     "build": "echo 'Extension build skipped for cloud deployment'",
