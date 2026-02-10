@@ -8,7 +8,10 @@ import { useRouter } from 'next/navigation';
 export default function Dashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState('agent');
+  const [activeTab, setActiveTab] = useState<'agent' | 'vault' | 'logs' | 'dev'>('agent');
+  const [apiKeys, setApiKeys] = useState<{ id: string, name: string, lastUsed: string | null, createdAt: string }[]>([]);
+  const [newTokenName, setNewTokenName] = useState('');
+  const [displayedToken, setDisplayedToken] = useState<string | null>(null);
   const [prompt, setPrompt] = useState('');
   const [messages, setMessages] = useState<{ role: 'user' | 'assistant', content: string }[]>([]);
   const [taskId, setTaskId] = useState<string | null>(null);
@@ -90,6 +93,38 @@ export default function Dashboard() {
     }
   };
 
+  // Fetch API Keys
+  useEffect(() => {
+    if (activeTab === 'dev') {
+      fetch('/api/tokens')
+        .then(res => res.json())
+        .then(data => setApiKeys(Array.isArray(data) ? data : []))
+        .catch(err => console.error('Failed to fetch tokens:', err));
+    }
+  }, [activeTab]);
+
+  const handleGenerateToken = async () => {
+    if (!newTokenName) return;
+    try {
+      const res = await fetch('/api/tokens', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newTokenName })
+      });
+      const data = await res.json();
+      if (data.token) {
+        setDisplayedToken(data.token);
+        setNewTokenName('');
+        // Refresh list
+        fetch('/api/tokens')
+          .then(res => res.json())
+          .then(data => setApiKeys(Array.isArray(data) ? data : []));
+      }
+    } catch (err) {
+      console.error('Failed to generate token:', err);
+    }
+  };
+
   if (status === 'loading') {
     return (
       <div className="h-screen bg-[#020617] flex items-center justify-center">
@@ -114,7 +149,7 @@ export default function Dashboard() {
         <nav className="flex-1 px-4 py-6 space-y-2">
           <NavItem active={activeTab === 'agent'} onClick={() => setActiveTab('agent')} icon={<Brain className="w-5 h-5" />} label="Command Center" />
           <NavItem active={activeTab === 'vault'} onClick={() => setActiveTab('vault')} icon={<Shield className="w-5 h-5" />} label="Identity Vault" />
-          <NavItem active={activeTab === 'data'} onClick={() => setActiveTab('data')} icon={<Database className="w-5 h-5" />} label="Scraped Data" />
+          <NavItem active={activeTab === 'dev'} onClick={() => setActiveTab('dev')} icon={<Terminal className="w-5 h-5" />} label="Developers" />
           <NavItem active={activeTab === 'logs'} onClick={() => setActiveTab('logs')} icon={<Terminal className="w-5 h-5" />} label="Live Telemetry" />
         </nav>
 
@@ -135,8 +170,7 @@ export default function Dashboard() {
           <h2 className="text-lg font-bold">
             {activeTab === 'agent' && 'Command Center'}
             {activeTab === 'vault' && 'Identity Vault'}
-            {activeTab === 'data' && 'Structured Data'}
-            {activeTab === 'logs' && 'Global Activity Logs'}
+            {activeTab === 'logs' && 'Live Telemetry'}
           </h2>
           <div className="flex items-center gap-4">
             <div className="hidden md:flex flex-col items-end mr-2">
@@ -228,6 +262,63 @@ export default function Dashboard() {
                   <Field label="Email" value="jianyu@example.com" />
                   <Field label="Job Title" value="Software Engineer" />
                   <Field label="Location" value="San Francisco, CA" />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'dev' && (
+            <div className="max-w-4xl mx-auto space-y-8">
+              <div className="bg-slate-900/60 p-8 rounded-4xl border border-white/5">
+                <h3 className="text-xl font-bold mb-2">API Tokens</h3>
+                <p className="text-slate-400 text-sm mb-6">Develop your own tools using our infrastructure.</p>
+
+                <div className="flex gap-4 mb-8">
+                  <input
+                    type="text"
+                    value={newTokenName}
+                    onChange={(e) => setNewTokenName(e.target.value)}
+                    placeholder="Key name (e.g. My App)"
+                    className="flex-1 bg-black/40 border border-white/10 rounded-2xl px-6 py-3 text-sm focus:border-blue-500 transition-all outline-none"
+                  />
+                  <button
+                    onClick={handleGenerateToken}
+                    className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-8 py-3 rounded-2xl transition-all"
+                  >
+                    Generate Key
+                  </button>
+                </div>
+
+                {displayedToken && (
+                  <div className="mb-8 p-6 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl relative overflow-hidden group">
+                    <div className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest mb-2">Secret Token (Save it now, it won't be shown again!)</div>
+                    <div className="font-mono text-sm break-all text-emerald-100">{displayedToken}</div>
+                    <button
+                      onClick={() => setDisplayedToken(null)}
+                      className="absolute top-4 right-4 text-emerald-500 hover:text-emerald-400 font-bold text-xs"
+                    >
+                      Dismiss
+                    </button>
+                  </div>
+                )}
+
+                <div className="space-y-3">
+                  {apiKeys.map(key => (
+                    <div key={key.id} className="flex items-center justify-between p-4 bg-black/20 rounded-2xl border border-white/5">
+                      <div>
+                        <div className="font-bold text-slate-200">{key.name}</div>
+                        <div className="text-[10px] text-slate-500 uppercase font-bold tracking-tighter">
+                          Created {new Date(key.createdAt).toLocaleDateString()} • Last used: {key.lastUsed ? new Date(key.lastUsed).toLocaleString() : 'Never'}
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <span className="px-3 py-1 bg-blue-500/10 text-blue-400 text-[10px] font-bold rounded-lg border border-blue-500/20">ACTIVE</span>
+                      </div>
+                    </div>
+                  ))}
+                  {apiKeys.length === 0 && (
+                    <div className="text-center py-12 text-slate-600 italic">No API tokens generated yet.</div>
+                  )}
                 </div>
               </div>
             </div>
