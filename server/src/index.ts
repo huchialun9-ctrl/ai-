@@ -13,7 +13,7 @@ async function main() {
 
     // HITL WebSocket Handler
     fastify.register(async (fastify) => {
-        fastify.get('/api/v1/agent/ws', { websocket: true }, (connection, req) => {
+        fastify.get('/api/v1/agent/ws', { websocket: true }, (connection: any, req) => {
             connection.socket.on('message', (message: Buffer | ArrayBuffer | Buffer[]) => {
                 const data = JSON.parse(message.toString());
                 fastify.log.info(`WS Message received: ${data.type}`);
