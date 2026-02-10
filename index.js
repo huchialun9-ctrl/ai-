@@ -1,60 +1,45 @@
 const http = require('http');
 
-const server = http.createServer((req, res) => {
-    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-    res.end(`
-    <!DOCTYPE html>
-    <html lang="zh-Hant">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Nova-Agent - 瀏覽器自動化助理</title>
-        <style>
-            body { 
-                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-                background-color: #0f172a;
-                color: #f8fafc;
-                display: flex; 
-                flex-direction: column;
-                align-items: center; 
-                justify-content: center; 
-                height: 100vh; 
-                margin: 0; 
-                text-align: center;
-            }
-            h1 { color: #3b82f6; font-size: 3rem; margin-bottom: 0.5rem; }
-            p { color: #94a3b8; font-size: 1.2rem; max-width: 600px; line-height: 1.6; }
-            .badge { 
-                background: rgba(59, 130, 246, 0.1); 
-                border: 1px solid rgba(59, 130, 246, 0.2);
-                color: #60a5fa;
-                padding: 4px 12px;
-                border-radius: 20px;
-                font-size: 0.8rem;
-                font-weight: bold;
-                text-transform: uppercase;
-                letter-spacing: 0.1em;
-                margin-bottom: 1rem;
-            }
-        </style>
-    </head>
-    <body>
-        <div class="badge">Deploy Successful</div>
-        <h1>託管網 (Nova-Agent)</h1>
-        <p>您的 AI 瀏覽器自動化助理正在運行。這是一個 Extension 專案，請在 Chrome 中安裝以開始使用。</p>
-    </body>
-    </html>
-  `);
-});
-
 const PORT = process.env.PORT || 3000;
 const HOST = '0.0.0.0';
 
+const server = http.createServer((req, res) => {
+    console.log(`[${new Date().toISOString()}] Incoming request: ${req.method} ${req.url}`);
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end(`
+        <!DOCTYPE html>
+        <html lang="zh-Hant">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Nova-Agent - Deployment Active</title>
+            <style>
+                body { font-family: sans-serif; background: #0f172a; color: #fff; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+                .card { background: #1e293b; padding: 2rem; border-radius: 1rem; border: 1px solid #3b82f6; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+                h1 { color: #3b82f6; margin: 0 0 1rem; }
+                p { color: #94a3b8; line-height: 1.6; }
+                .status { margin-top: 1.5rem; display: inline-block; padding: 0.5rem 1rem; background: rgba(59, 130, 246, 0.1); color: #60a5fa; border-radius: 2rem; font-weight: bold; }
+            </style>
+        </head>
+        <body>
+            <div class="card">
+                <h1>Nova-Agent 🚀</h1>
+                <p>雲端託管環境已成功啟動。<br>這是一個瀏覽器擴充功能專案，請手動載入原始碼進行安裝。</p>
+                <div class="status">System Online (Port: ${PORT})</div>
+            </div>
+        </body>
+        </html>
+    `);
+});
+
 server.on('error', (err) => {
-    console.error('Server error:', err);
+    console.error('SERVER FATAL ERROR:', err);
 });
 
 server.listen(PORT, HOST, () => {
-    console.log(`Nova-Agent Landing Page is live at http://${HOST}:${PORT}`);
-    console.log('Detected Environment:', process.env.NODE_ENV || 'development');
+    console.log(`\n=========================================`);
+    console.log(` Nova-Agent Server is now ONLINE`);
+    console.log(` Listening on: http://${HOST}:${PORT}`);
+    console.log(` Time: ${new Date().toISOString()}`);
+    console.log(`=========================================\n`);
 });
